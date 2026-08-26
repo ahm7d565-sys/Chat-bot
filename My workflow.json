@@ -1,0 +1,149 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "legal-chat",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "6bad7ddc-e679-42e5-9a86-dd28da245832",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "395a4bf4-3724-4ad4-87ed-95566f7b4113"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.chatInput || $json.body.message || $json.body.text || \"لم يتم إرسال أي سؤال. من فضلك أرسل سؤالك القانوني في الحقل chatInput.\" }}",
+        "options": {
+          "systemMessage": "أنت مستشار ذكي متخصص حصرياً في الاستشارات القانونية. مهمتك الوحيدة هي الإجابة على الأسئلة القانونية واللوائح. ممنوع منعاً باتاً الإجابة على أي أسئلة خارج هذا النطاق (مثل الطبخ، البرمجة، الأمور المالية، الرياضة، أو الأسئلة العامة). إذا كان السؤال خارج نطاق القانون، اعتذر بلباقة وقل: عذراً، أنا مبرمج لتقديم الاستشارات القانونية فقط، ولا يمكنني الإجابة على هذا الموضوع."
+        }
+      },
+      "id": "1219569c-e92a-46d6-bc0f-1f0390d7df9d",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.6-flash",
+        "options": {}
+      },
+      "id": "0465a057-4092-43b5-84bf-ee918a7409a4",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        192,
+        192
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "InpNqP8M66lshflB",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $(\"Webhook\").item.json.body.sessionId || $execution.id }}"
+      },
+      "id": "c37a3cc0-b3e5-48c1-b1dd-f1572afc5653",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        304,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "da26453f-43f4-4975-a831-997fd9f9311c",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        592,
+        0
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e1270ca0-7a32-4a7c-9961-55b0f0e60452",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4624026b99f54c55976ffb8dad549e805bac8ce8aa6302a5c6275636bc1ccb37"
+  },
+  "nodeGroups": [],
+  "id": "uUapi6fJ5ow0QRAe",
+  "tags": []
+}
